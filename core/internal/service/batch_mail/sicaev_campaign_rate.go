@@ -102,7 +102,7 @@ func rateSleep(ctx context.Context, delay time.Duration) error {
 func reserveCampaignAttempt(ctx context.Context, campaignScope string, perHour, perDay int) (time.Duration,error) {
     var retry time.Duration
     err := g.DB().Transaction(ctx,func(ctx context.Context, tx gdb.TX) error {
-        if _, err := tx.Exec("SELECT pg_advisory_xact_lock(6619, 1001)"); err != nil { return err }
+        if _, err := tx.GetOne("SELECT pg_advisory_xact_lock(6619, 1001)"); err != nil { return err }
         if _, err := tx.Exec(`INSERT INTO bm_sicaev_campaign_rate(scope)
             VALUES ('global'), (?) ON CONFLICT (scope) DO NOTHING`,campaignScope); err != nil { return err }
 
