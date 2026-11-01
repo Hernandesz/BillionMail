@@ -33,4 +33,5 @@ type IContactV1 interface {
 	DeleteContactsNDP(ctx context.Context, req *v1.DeleteContactsNDPReq) (res *v1.DeleteContactsNDPRes, err error)
 	BatchTagContacts(ctx context.Context, req *v1.BatchTagContactsReq) (res *v1.BatchTagContactsRes, err error)
 	ListMasterContacts(ctx context.Context, req *v1.ListMasterContactsReq) (res *v1.ListMasterContactsRes, err error)
+	ImportMasterContacts(ctx context.Context, req *v1.ImportMasterContactsReq) (res *v1.ImportMasterContactsRes, err error)
 }
