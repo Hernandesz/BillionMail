@@ -53,13 +53,13 @@ func (c *ControllerV1) ImportMasterContacts(ctx context.Context, req *v1.ImportM
                 return errors.New("metadata and sources exceed 256 KB for "+email)
             }
 
-            found, e := tx.GetOne("SELECT id FROM bm_master_contacts WHERE email=$1", email)
+            found, e := tx.GetOne("SELECT id FROM bm_master_contacts WHERE email=?", email)
             if e != nil { return e }
             if _, e = tx.Exec(`
                 INSERT INTO bm_master_contacts
                   (email,full_name,job_title,department,company_name,industry,
                    phone,website,linkedin_url,city,state_region,country,metadata,source_details)
-                VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13::jsonb,$14::jsonb)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?::jsonb,?::jsonb)
                 ON CONFLICT (email) DO UPDATE SET
                     full_name=EXCLUDED.full_name,
                     job_title=EXCLUDED.job_title,
