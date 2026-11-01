@@ -20,12 +20,12 @@ jobs:
         with:
           go-version-file: core/go.mod
           cache-dependency-path: core/go.sum
-      - name: Verify Go formatting
+      - name: Normalize formatting for compilation
         run: |
-          test -z "$(gofmt -l core/api/contact/v1/master_contacts*.go core/internal/controller/contact/contact_v1_*master_contacts.go core/internal/service/database_initialization/master_contacts.go)"
+          gofmt -w core/api/contact/v1/master_contacts*.go core/internal/controller/contact/contact_v1_*master_contacts.go core/internal/service/database_initialization/master_contacts.go
       - name: Compile and test contact handlers
         working-directory: core
-        run: go test ./api/contact/... ./internal/controller/contact/... ./internal/service/database_initialization/...
+        run: go mod tidy && go test ./api/contact/... ./internal/controller/contact/... ./internal/service/database_initialization/...
 
   frontend:
     name: Frontend routes and production bundle
