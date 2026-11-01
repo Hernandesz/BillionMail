@@ -38,3 +38,18 @@ export interface CentralContactParams {
 // Uses BillionMail's authenticated /api route and existing axios interceptors.
 export const getCentralContacts = (params: CentralContactParams) =>
   instance.get<{ list: CentralContact[]; total: number }>('/contact/master/list', { params })
+
+export type CentralContactImport = Pick<CentralContact,
+  'email' | 'full_name' | 'job_title' | 'department' | 'company_name' |
+  'industry' | 'phone' | 'website' | 'linkedin_url' | 'city' |
+  'state_region' | 'country'> & {
+  metadata?: Record<string, unknown>
+  source_details?: unknown[]
+}
+
+export const importCentralContacts = (contacts: CentralContactImport[]) =>
+  instance.post<{ added: number; updated: number; total: number }>(
+    '/contact/master/import',
+    { contacts },
+    { fetchOptions: { successMessage: true } }
+  )
