@@ -31,6 +31,7 @@ type IBatchMailV1 interface {
 	UpdateTaskInfo(ctx context.Context, req *v1.UpdateTaskInfoReq) (res *v1.UpdateTaskInfoRes, err error)
 	UpdateTaskSpeed(ctx context.Context, req *v1.UpdateTaskSpeedReq) (res *v1.UpdateTaskSpeedRes, err error)
 	CampaignRateStatus(ctx context.Context, req *v1.CampaignRateStatusReq) (res *v1.CampaignRateStatusRes, err error)
+	ServinteWAProgress(ctx context.Context, req *v1.ServinteWAProgressReq) (res *v1.ServinteWAProgressRes, err error)
 	PauseTask(ctx context.Context, req *v1.PauseTaskReq) (res *v1.PauseTaskRes, err error)
 	ResumeTask(ctx context.Context, req *v1.ResumeTaskReq) (res *v1.ResumeTaskRes, err error)
 	Unsubscribe(ctx context.Context, req *v1.UnsubscribeReq) (res *v1.UnsubscribeRes, err error)
