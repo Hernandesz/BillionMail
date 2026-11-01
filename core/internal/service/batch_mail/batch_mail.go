@@ -25,6 +25,8 @@ var (
 )
 
 type CreateTaskArgs struct {
+	MaxPerHour int `json:"max_per_hour"`
+	MaxPerDay int `json:"max_per_day"`
 	Addresser   string `json:"addresser"`   // Sender email address
 	Subject     string `json:"subject"`     // Email subject
 	FullName    string `json:"full_name"`   // FullName of Sender
@@ -42,6 +44,21 @@ type CreateTaskArgs struct {
 	GroupId   int    `json:"group_id"`   // Groups to unsubscribe from
 	TagIds    []int  `json:"tag_ids"`    // Tag IDs for filtering contacts
 	TagLogic  string `json:"tag_logic"`  // Tag logic (AND/OR)
+}
+
+// Clamp malformed or omitted fields to conservative defaults. The strict
+// global limiter remains independent of the campaign presets.
+func campaignHourlyPreset(value int) int {
+    switch value {
+    case 1,5,10,20,60: return value
+    default: return 20
+    }
+}
+func campaignDailyPreset(value int) int {
+    switch value {
+    case 20,50,100,200: return value
+    default: return 200
+    }
 }
 
 // ============= task related operations =============
@@ -142,6 +159,8 @@ func CreateTask(ctx context.Context, args CreateTaskArgs) (int, error) {
 		"is_record":       args.IsRecord,
 		"unsubscribe":     args.Unsubscribe,
 		"threads":         args.Threads,
+		"max_per_hour":    campaignHourlyPreset(args.MaxPerHour),
+		"max_per_day":     campaignDailyPreset(args.MaxPerDay),
 		//"etypes":          args.Etypes,
 		"track_open":  args.TrackOpen,
 		"track_click": args.TrackClick,
@@ -425,6 +444,8 @@ func CreateTaskWithRecipients(ctx context.Context, req *v1.CreateTaskReq, addTyp
 			"is_record":       req.IsRecord,
 			"unsubscribe":     req.Unsubscribe,
 			"threads":         req.Threads,
+			"max_per_hour":    campaignHourlyPreset(req.MaxPerHour),
+			"max_per_day":     campaignDailyPreset(req.MaxPerDay),
 			"track_open":      req.TrackOpen,
 			"track_click":     req.TrackClick,
 			"start_time":      req.StartTime,
