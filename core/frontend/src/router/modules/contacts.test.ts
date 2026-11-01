@@ -25,23 +25,26 @@ describe('contacts route', () => {
     expect(route.name).toBe('ContactsLayout')
   })
 
-  it('first child has sub-routes for group, subscribers, suspend, tags', () => {
+  it('first child exposes master, group, subscribers, suspend and tags', () => {
     const contacts = route.children![0]
     expect(contacts.name).toBe('Contacts')
     const subRoutes = contacts.children!
-    expect(subRoutes).toHaveLength(4)
+    expect(subRoutes).toHaveLength(5)
 
-    expect(subRoutes[0].path).toBe('group')
-    expect(subRoutes[0].name).toBe('ContactsGroup')
+    expect(subRoutes[0].path).toBe('master')
+    expect(subRoutes[0].name).toBe('ContactsMaster')
 
-    expect(subRoutes[1].path).toBe('subscribers')
-    expect(subRoutes[1].name).toBe('ContactsSubscribers')
+    expect(subRoutes[1].path).toBe('group')
+    expect(subRoutes[1].name).toBe('ContactsGroup')
 
-    expect(subRoutes[2].path).toBe('suspend')
-    expect(subRoutes[2].name).toBe('ContactsSuspend')
+    expect(subRoutes[2].path).toBe('subscribers')
+    expect(subRoutes[2].name).toBe('ContactsSubscribers')
 
-    expect(subRoutes[3].path).toBe('tags')
-    expect(subRoutes[3].name).toBe('ContactsTags')
+    expect(subRoutes[3].path).toBe('suspend')
+    expect(subRoutes[3].name).toBe('ContactsSuspend')
+
+    expect(subRoutes[4].path).toBe('tags')
+    expect(subRoutes[4].name).toBe('ContactsTags')
   })
 
   it('has settings route with id param', () => {
