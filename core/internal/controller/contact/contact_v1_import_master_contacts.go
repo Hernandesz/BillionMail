@@ -53,9 +53,9 @@ func (c *ControllerV1) ImportMasterContacts(ctx context.Context, req *v1.ImportM
                 return errors.New("metadata and sources exceed 256 KB for "+email)
             }
 
-            found, e := tx.GetOne(ctx, "SELECT id FROM bm_master_contacts WHERE email=$1", email)
+            found, e := tx.GetOne("SELECT id FROM bm_master_contacts WHERE email=$1", email)
             if e != nil { return e }
-            if _, e = tx.Exec(ctx, `
+            if _, e = tx.Exec(`
                 INSERT INTO bm_master_contacts
                   (email,full_name,job_title,department,company_name,industry,
                    phone,website,linkedin_url,city,state_region,country,metadata,source_details)
