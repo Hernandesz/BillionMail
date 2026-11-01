@@ -518,10 +518,23 @@ func CreateTaskWithRecipients(ctx context.Context, req *v1.CreateTaskReq, addTyp
 			return gerror.New(public.LangCtx(ctx, "Failed to import recipients: {}", err.Error()))
 		}
 
-		if actualCount, e2 := GetActualRecipientCount(ctx, taskId); e2 == nil && actualCount > 0 {
-			if _, e2 = tx.Ctx(ctx).Model("email_tasks").Where("id", taskId).Data(g.Map{"recipient_count": actualCount}).Update(); e2 != nil {
-				return gerror.New(public.LangCtx(ctx, "Failed to update recipient count for task {}: {}", taskId, e2.Error()))
-			}
+		// Recipient rows are inserted in this uncommitted transaction.
+		// Count them on the SAME tx: g.DB() cannot see them until COMMIT,
+		// and the previous code silently left recipient_count at zero.
+		actualCount, e2 := tx.Ctx(ctx).Model("recipient_info").
+			Where("task_id", taskId).
+			Count()
+		if e2 != nil {
+			return fmt.Errorf("count campaign recipients before commit: %w", e2)
+		}
+		if actualCount <= 0 {
+			return fmt.Errorf("campaign %d has no usable recipients", taskId)
+		}
+		if _, e2 = tx.Ctx(ctx).Model("email_tasks").
+			Where("id", taskId).
+			Data(g.Map{"recipient_count": actualCount}).
+			Update(); e2 != nil {
+			return fmt.Errorf("save campaign recipient count: %w", e2)
 		}
 
 		if req.Warmup == 1 {
