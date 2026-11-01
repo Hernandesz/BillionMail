@@ -13,7 +13,6 @@ import (
     "github.com/gogf/gf/v2/database/gdb"
     "github.com/gogf/gf/v2/errors/gerror"
     "github.com/gogf/gf/v2/frame/g"
-    "github.com/gogf/gf/v2/util/gconv"
 )
 
 var masterEmailRE = regexp.MustCompile(`^[^\s@]+@[^\s@]+\.[^\s@]{2,}$`)
@@ -95,7 +94,6 @@ func (c *ControllerV1) ImportMasterContacts(ctx context.Context, req *v1.ImportM
         return res,nil
     }
     res.Data.Total = res.Data.Added+res.Data.Updated
-    _ = gconv.Int(res.Data.Total)
     res.SetSuccess(public.LangCtx(ctx,"Master contacts saved without group assignment or subscription changes"))
     return res,nil
 }
