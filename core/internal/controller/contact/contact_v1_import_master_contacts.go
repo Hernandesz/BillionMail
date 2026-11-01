@@ -55,11 +55,35 @@ func (c *ControllerV1) ImportMasterContacts(ctx context.Context, req *v1.ImportM
 
             found, e := tx.GetOne("SELECT id FROM bm_master_contacts WHERE email=?", email)
             if e != nil { return e }
+            rowJSON, e := json.Marshal(map[string]interface{}{
+                "email": email,
+                "full_name": strings.TrimSpace(item.FullName),
+                "job_title": strings.TrimSpace(item.JobTitle),
+                "department": strings.TrimSpace(item.Department),
+                "company_name": strings.TrimSpace(item.CompanyName),
+                "industry": strings.TrimSpace(item.Industry),
+                "phone": strings.TrimSpace(item.Phone),
+                "website": strings.TrimSpace(item.Website),
+                "linkedin_url": strings.TrimSpace(item.LinkedInURL),
+                "city": strings.TrimSpace(item.City),
+                "state_region": strings.TrimSpace(item.StateRegion),
+                "country": strings.TrimSpace(item.Country),
+                "metadata": json.RawMessage(metadataJSON),
+                "source_details": json.RawMessage(sourcesJSON),
+            })
+            if e != nil { return e }
             if _, e = tx.Exec(`
                 INSERT INTO bm_master_contacts
                   (email,full_name,job_title,department,company_name,industry,
                    phone,website,linkedin_url,city,state_region,country,metadata,source_details)
-                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?::jsonb,?::jsonb)
+                SELECT email, full_name, job_title, department, company_name, industry,
+                       phone, website, linkedin_url, city, state_region, country, metadata, source_details
+                FROM jsonb_to_record(?::jsonb) AS contact_row (
+                    email text, full_name text, job_title text, department text,
+                    company_name text, industry text, phone text, website text,
+                    linkedin_url text, city text, state_region text, country text,
+                    metadata jsonb, source_details jsonb
+                )
                 ON CONFLICT (email) DO UPDATE SET
                     full_name=EXCLUDED.full_name,
                     job_title=EXCLUDED.job_title,
@@ -75,13 +99,7 @@ func (c *ControllerV1) ImportMasterContacts(ctx context.Context, req *v1.ImportM
                     metadata=EXCLUDED.metadata,
                     source_details=EXCLUDED.source_details,
                     updated_at=EXTRACT(EPOCH FROM NOW())
-                `,
-                email,strings.TrimSpace(item.FullName),strings.TrimSpace(item.JobTitle),
-                strings.TrimSpace(item.Department),strings.TrimSpace(item.CompanyName),
-                strings.TrimSpace(item.Industry),strings.TrimSpace(item.Phone),
-                strings.TrimSpace(item.Website),strings.TrimSpace(item.LinkedInURL),
-                strings.TrimSpace(item.City),strings.TrimSpace(item.StateRegion),
-                strings.TrimSpace(item.Country),string(metadataJSON),string(sourcesJSON)); e != nil {
+                `, string(rowJSON)); e != nil {
                 return fmt.Errorf("save %s: %w",email,e)
             }
             if len(found) > 0 { res.Data.Updated++ } else { res.Data.Added++ }
