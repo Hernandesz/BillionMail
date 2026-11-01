@@ -85,19 +85,28 @@ func (c *ControllerV1) ImportMasterContacts(ctx context.Context, req *v1.ImportM
                     metadata jsonb, source_details jsonb
                 )
                 ON CONFLICT (email) DO UPDATE SET
-                    full_name=EXCLUDED.full_name,
-                    job_title=EXCLUDED.job_title,
-                    department=EXCLUDED.department,
-                    company_name=EXCLUDED.company_name,
-                    industry=EXCLUDED.industry,
-                    phone=EXCLUDED.phone,
-                    website=EXCLUDED.website,
-                    linkedin_url=EXCLUDED.linkedin_url,
-                    city=EXCLUDED.city,
-                    state_region=EXCLUDED.state_region,
-                    country=EXCLUDED.country,
-                    metadata=EXCLUDED.metadata,
-                    source_details=EXCLUDED.source_details,
+                    full_name=COALESCE(NULLIF(EXCLUDED.full_name, ''), bm_master_contacts.full_name),
+                    job_title=COALESCE(NULLIF(EXCLUDED.job_title, ''), bm_master_contacts.job_title),
+                    department=COALESCE(NULLIF(EXCLUDED.department, ''), bm_master_contacts.department),
+                    company_name=COALESCE(NULLIF(EXCLUDED.company_name, ''), bm_master_contacts.company_name),
+                    industry=COALESCE(NULLIF(EXCLUDED.industry, ''), bm_master_contacts.industry),
+                    phone=COALESCE(NULLIF(EXCLUDED.phone, ''), bm_master_contacts.phone),
+                    website=COALESCE(NULLIF(EXCLUDED.website, ''), bm_master_contacts.website),
+                    linkedin_url=COALESCE(NULLIF(EXCLUDED.linkedin_url, ''), bm_master_contacts.linkedin_url),
+                    city=COALESCE(NULLIF(EXCLUDED.city, ''), bm_master_contacts.city),
+                    state_region=COALESCE(NULLIF(EXCLUDED.state_region, ''), bm_master_contacts.state_region),
+                    country=COALESCE(NULLIF(EXCLUDED.country, ''), bm_master_contacts.country),
+                    metadata=bm_master_contacts.metadata || EXCLUDED.metadata,
+                    source_details=(
+                        SELECT COALESCE(jsonb_agg(src), '[]'::jsonb)
+                        FROM (
+                            SELECT DISTINCT value AS src
+                            FROM jsonb_array_elements(
+                                COALESCE(bm_master_contacts.source_details, '[]'::jsonb) ||
+                                COALESCE(EXCLUDED.source_details, '[]'::jsonb)
+                            )
+                        ) AS distinct_sources
+                    ),
                     updated_at=EXTRACT(EPOCH FROM NOW())
                 `, string(rowJSON)); e != nil {
                 return fmt.Errorf("save %s: %w",email,e)
