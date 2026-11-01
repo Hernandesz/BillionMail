@@ -27,7 +27,8 @@ LEFT JOIN LATERAL (
         COALESCE(jsonb_agg(DISTINCT jsonb_build_object('id', grp.id, 'name', grp.name))
                  FILTER (WHERE grp.id IS NOT NULL), '[]'::jsonb) AS groups,
         COALESCE(jsonb_agg(DISTINCT jsonb_build_object('id', tag.id, 'name', tag.name))
-                 FILTER (WHERE tag.id IS NOT NULL), '[]'::jsonb) AS tags
+                 FILTER (WHERE tag.id IS NOT NULL), '[]'::jsonb) AS tags,
+        COALESCE(jsonb_agg(DISTINCT c.attribs) FILTER (WHERE c.attribs IS NOT NULL), '[]'::jsonb) AS native_attributes
     FROM bm_contacts c
     LEFT JOIN bm_contact_groups grp ON c.group_id = grp.id
     LEFT JOIN bm_contact_tags ct ON ct.contact_id = c.id
@@ -97,7 +98,7 @@ func (c *ControllerV1) ListMasterContacts(ctx context.Context, req *v1.ListMaste
            WHEN m.id IS NOT NULL THEN 'master' ELSE 'native' END AS source,
       COALESCE(m.updated_at,0) AS updated_at,
       nc.groups::text AS groups, nc.tags::text AS tags,
-      COALESCE(m.metadata::text,'{}') AS metadata,
+      (COALESCE(m.metadata,'{}'::jsonb) || jsonb_build_object('billionmail_attributes',nc.native_attributes))::text AS metadata,
       COALESCE(m.source_details::text,'[]') AS source_details
     ` + masterContactFrom + clause +
     " ORDER BY COALESCE(m.company_name,''), directory.email LIMIT $2 OFFSET $3"
