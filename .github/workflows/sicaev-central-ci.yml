@@ -1,0 +1,46 @@
+name: SICAEV central contacts validation
+
+on:
+  pull_request:
+    paths:
+      - 'core/**'
+      - '.github/workflows/sicaev-central-ci.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  go:
+    name: Go API and database initialization
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: core/go.mod
+          cache-dependency-path: core/go.sum
+      - name: Verify Go formatting
+        run: |
+          test -z "$(gofmt -l core/api/contact/v1/master_contacts*.go core/internal/controller/contact/contact_v1_*master_contacts.go core/internal/service/database_initialization/master_contacts.go)"
+      - name: Compile and test contact handlers
+        working-directory: core
+        run: go test ./api/contact/... ./internal/controller/contact/... ./internal/service/database_initialization/...
+
+  frontend:
+    name: Frontend routes and production bundle
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: core/frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install pnpm
+        run: corepack enable && corepack prepare pnpm@10.17.0 --activate
+      - name: Install frontend dependencies
+        run: pnpm install --no-frozen-lockfile
+      - name: Build frontend
+        run: pnpm run build
