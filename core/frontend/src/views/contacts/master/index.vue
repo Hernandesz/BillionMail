@@ -21,6 +21,7 @@
           placeholder="Buscar correo, empresa, nombre o cargo"
           @search="resetTable" />
         <n-button @click="fetchTable()">Actualizar</n-button>
+        <n-button type="primary" @click="showAdd = true">Nuevo contacto</n-button>
       </template>
       <template #table>
         <n-data-table
@@ -92,6 +93,7 @@
         </template>
       </n-drawer-content>
     </n-drawer>
+    <MasterContactAdd v-model:show="showAdd" @saved="fetchTable()" />
   </div>
 </template>
 
@@ -99,6 +101,7 @@
 import { NButton, NFlex, NTag, type DataTableColumns } from 'naive-ui'
 import { useDataTable } from '@/hooks/useDataTable'
 import { getCentralContacts, type CentralContact, type CentralContactParams } from '@/api/modules/contacts/master'
+import MasterContactAdd from './MasterContactAdd.vue'
 
 const { tableProps, tableParams, tableTotal, pageProps, fetchTable, resetTable } =
   useDataTable<CentralContact, CentralContactParams>({
@@ -117,6 +120,7 @@ const filterOptions = [
   { label: 'Suscritos', value: 'subscribed' },
 ]
 
+const showAdd = ref(false)
 const showDetails = ref(false)
 const selected = ref<CentralContact | null>(null)
 
