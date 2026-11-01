@@ -20,6 +20,12 @@ const route: RouteRecordRaw = {
 			component: () => import('@/views/contacts/index.vue'),
 			children: [
 				{
+					path: 'master',
+					name: 'ContactsMaster',
+					meta: { title: 'Base central de contactos', titleKey: '' },
+					component: () => import('@/views/contacts/master/index.vue'),
+				},
+				{
 					path: 'group',
 					name: 'ContactsGroup',
 					meta: { title: 'Group', titleKey: 'layout.menu.group' },
