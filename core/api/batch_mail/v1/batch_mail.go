@@ -26,6 +26,8 @@ type EmailTask struct {
 	IsRecord       int    `json:"is_record"       dc:"is record"`
 	Unsubscribe    int    `json:"unsubscribe"     dc:"unsubscribe"`
 	Threads        int    `json:"threads"         dc:"threads"`
+	MaxPerHour     int    `json:"max_per_hour" dc:"hourly dispatch preset"`
+	MaxPerDay      int    `json:"max_per_day" dc:"daily dispatch preset"`
 	//Etypes                  string `json:"etypes"          dc:"etypes"`
 	TrackOpen               int       `json:"track_open"      dc:"track open"`
 	TrackClick              int       `json:"track_click"     dc:"track click"`
@@ -147,6 +149,8 @@ type CreateTaskReq struct {
 	IsRecord      int    `json:"is_record" v:"in:0,1" dc:"is record" default:"1"`
 	Unsubscribe   int    `json:"unsubscribe" v:"in:0,1" dc:"unsubscribe" default:"1"`
 	Threads       int    `json:"threads" v:"min:0" dc:"threads" default:"5"`
+	MaxPerHour    int    `json:"max_per_hour" v:"in:0,1,5,10,20,60" dc:"hourly sending limit (0=default 20)" default:"20"`
+	MaxPerDay     int    `json:"max_per_day" v:"in:0,20,50,100,200" dc:"daily sending limit (0=default 200)" default:"200"`
 	TrackOpen     int    `json:"track_open" v:"in:0,1" dc:"track open" default:"1"`
 	TrackClick    int    `json:"track_click" v:"in:0,1" dc:"track click" default:"1"`
 	StartTime     int    `json:"start_time" v:"required" dc:"start time"`
@@ -278,6 +282,8 @@ type UpdateTaskInfoReq struct {
 	Unsubscribe   int    `json:"unsubscribe" v:"in:0,1" dc:"unsubscribe"`
 	Warmup        int    `json:"warmup" v:"in:0,1" dc:"warmup"`
 	Threads       int    `json:"threads" v:"min:0" dc:"threads"`
+	MaxPerHour    int    `json:"max_per_hour" v:"in:0,1,5,10,20,60" dc:"hourly limit, 0 leaves unchanged"`
+	MaxPerDay     int    `json:"max_per_day" v:"in:0,20,50,100,200" dc:"daily limit, 0 leaves unchanged"`
 	StartTime     int    `json:"start_time" dc:"start time"`
 	TagIds        []int  `json:"tag_ids" dc:"tag ids for filtering contacts"`
 	TagLogic      string `json:"tag_logic" v:"in:AND,OR,NOT" dc:"tag logic (AND: must have all tags, OR: have any tag, NOT)"`

@@ -98,6 +98,27 @@
 									</n-input-number>
 								</div>
 							</n-form-item>
+						<div class="sicaev-rate-panel">
+							<div class="font-bold text-16px mb-8px">Control de velocidad de envío</div>
+							<n-alert type="info" :show-icon="true" class="mb-12px">
+								Límite compartido entre todas las campañas: máximo 20 envíos/hora (uno cada 3 minutos)
+								y 200 envíos/día UTC. Los límites seleccionados solo pueden reducir esa velocidad.
+								Las pruebas y los envíos por API no están incluidos en este control de campañas.
+							</n-alert>
+							<n-grid :cols="24" :x-gap="16">
+								<n-form-item-gi :span="12" label="Velocidad máxima de esta campaña">
+									<n-select v-model:value="form.max_per_hour" :options="hourlyRateOptions" />
+								</n-form-item-gi>
+								<n-form-item-gi :span="12" label="Máximo diario de esta campaña">
+									<n-select v-model:value="form.max_per_day" :options="dailyRateOptions" />
+								</n-form-item-gi>
+							</n-grid>
+							<div class="text-desc text-12px mt-4px">
+								Velocidad efectiva: hasta {{ Math.min(form.max_per_hour, 20) }} correos/hora.
+								Si selecciona 1 por minuto, seguirá limitado a 20/hora en total.
+								Los topes se aplican al intentar enviar, incluso si se reinicia el servidor.
+							</div>
+						</div>
 						</n-card>
 						<n-card>
 							<n-form-item :label="t('market.task.edit.sendTime')" path="start_time">
@@ -206,6 +227,8 @@ const form = reactive({
 	unsubscribe: 1,
 	warmup: 0,
 	threads: 0,
+	max_per_hour: 20,
+	max_per_day: 200,
 	start_time: null as number | null,
 	remark: '',
 	tag_ids: [] as number[],
@@ -213,6 +236,20 @@ const form = reactive({
 	track_click: 1,
 	track_open: 1,
 })
+
+const hourlyRateOptions = [
+	{ label: '1 correo por hora', value: 1 },
+	{ label: '5 correos por hora', value: 5 },
+	{ label: '10 correos por hora', value: 10 },
+	{ label: '20 correos por hora (recomendado)', value: 20 },
+	{ label: '1 correo por minuto (limitado por tope global)', value: 60 },
+]
+const dailyRateOptions = [
+	{ label: '20 correos por día', value: 20 },
+	{ label: '50 correos por día', value: 50 },
+	{ label: '100 correos por día', value: 100 },
+	{ label: '200 correos por día (máximo)', value: 200 },
+]
 
 const logicOptions = [
 	{
@@ -385,6 +422,8 @@ const getParams = () => {
 		unsubscribe: form.unsubscribe,
 		warmup: form.warmup,
 		threads: form.threads,
+		max_per_hour: form.max_per_hour,
+		max_per_day: form.max_per_day,
 		start_time: startTime / 1000,
 		remark: form.remark,
 		tag_ids: form.tag_ids,
@@ -441,6 +480,8 @@ const initForm = async () => {
 		form.is_record = res.is_record
 		form.unsubscribe = res.unsubscribe
 		form.threads = res.threads
+		form.max_per_hour = res.max_per_hour || 20
+		form.max_per_day = res.max_per_day || 200
 		threadsType.value = res.threads === 0 ? 0 : 1
 		form.remark = res.remark
 		form.tag_logic = res.tag_logic

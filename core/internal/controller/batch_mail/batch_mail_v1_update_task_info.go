@@ -70,6 +70,24 @@ func (c *ControllerV1) UpdateTaskInfo(ctx context.Context, req *v1.UpdateTaskInf
 	if req.Threads > 0 {
 		updateData["threads"] = req.Threads
 	}
+	if req.MaxPerHour != 0 {
+		switch req.MaxPerHour {
+		case 1, 5, 10, 20, 60:
+			updateData["max_per_hour"] = req.MaxPerHour
+		default:
+			res.SetError(gerror.New("Invalid hourly campaign limit"))
+			return
+		}
+	}
+	if req.MaxPerDay != 0 {
+		switch req.MaxPerDay {
+		case 20, 50, 100, 200:
+			updateData["max_per_day"] = req.MaxPerDay
+		default:
+			res.SetError(gerror.New("Invalid daily campaign limit"))
+			return
+		}
+	}
 	if req.StartTime > 0 {
 		updateData["start_time"] = req.StartTime
 	}
@@ -98,7 +116,7 @@ func (c *ControllerV1) UpdateTaskInfo(ctx context.Context, req *v1.UpdateTaskInf
 
 	_ = public.WriteLog(ctx, public.LogParams{
 		Type: consts.LOGTYPE.Task,
-		Log:  "Update Task Info :" + updateData["subject"].(string) + " successfully",
+		Log:  "Update Task Info successfully",
 		Data: updateData,
 	})
 

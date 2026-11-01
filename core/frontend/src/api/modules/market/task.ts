@@ -37,6 +37,8 @@ interface TaskAddParams {
 	warmup: number
 	unsubscribe: number
 	threads: number
+	max_per_hour: number
+	max_per_day: number
 	start_time: number
 	remark: string
 	tag_ids: number[]

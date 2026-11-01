@@ -706,6 +706,8 @@ func (e *TaskExecutor) processRecipientBatch(ctx context.Context, task *entity.E
 
 	// create wait group to track all send tasks
 	var sendWg sync.WaitGroup
+	// An unavailable regulator must not mark these recipients as delivered.
+	rateErrors := make(chan error, len(recipients))
 
 	// create a mutex and flag to control channel closure
 	var mu sync.Mutex
@@ -757,15 +759,11 @@ func (e *TaskExecutor) processRecipientBatch(ctx context.Context, task *entity.E
 		default:
 		}
 
-		// wait for rate control
+		// Legacy thread controller: never send when a rate wait fails.
 		if err := e.rateController.Wait(ctx); err != nil {
-			if errors.Is(err, context.Canceled) {
-				safeClose() // safe close channel
-				return err
-			}
-			// record error but continue
-			g.Log().Debugf(ctx, "Rate limit wait error: %v", err)
-
+			safeClose()
+			_, _ = e.resetFetchedRecords(task.Id)
+			return err
 		}
 
 		// check if recipient is allowed to send with warmup
@@ -793,6 +791,25 @@ func (e *TaskExecutor) processRecipientBatch(ctx context.Context, task *entity.E
 			defer sendWg.Done()
 			// print task id
 			//g.Log().Debug(ctx, "current task id", task.Id, "sender-", task.Addresser, "recipient-", recipientBak.Recipient)
+			// Obtain a global and campaign-specific PostgreSQL permit immediately
+			// before SMTP dispatch. Waiting here prevents concurrent campaigns
+			// from exceeding the shared budget.
+			if err := waitCampaignRate(ctx, task.Id, task.MaxPerHour, task.MaxPerDay, &e.isPaused); err != nil {
+				rateErrors <- err
+				return
+			}
+			// If paused just after reservation, hold without dispatching.
+			// The consumed permit is deliberately never refunded.
+			for e.isPaused.Load() {
+				if err := rateSleep(ctx, time.Second); err != nil {
+					rateErrors <- err
+					return
+				}
+			}
+			if err := ctx.Err(); err != nil {
+				rateErrors <- err
+				return
+			}
 			// personalize content
 			personalized, _ := e.personalizeEmail(ctx, emailContent, task, recipientBak)
 			//personalized := emailContent
@@ -883,8 +900,15 @@ func (e *TaskExecutor) processRecipientBatch(ctx context.Context, task *entity.E
 	// wait for result processing to complete or context canceled
 	select {
 	case <-resultsDone:
-		// result processing completed
-		return nil
+		select {
+		case rateErr := <-rateErrors:
+			if _, resetErr := e.resetFetchedRecords(task.Id); resetErr != nil {
+				return fmt.Errorf("campaign limiter error: %v; reset pending recipients: %w", rateErr, resetErr)
+			}
+			return rateErr
+		default:
+			return nil
+		}
 	case <-ctx.Done():
 		// context canceled
 		return ctx.Err()
