@@ -71,6 +71,8 @@ type EmailTask struct {
 	IsRecord       int    `json:"is_record"       dc:"Record to Outbox"`
 	Unsubscribe    int    `json:"unsubscribe"     dc:"Allow Unsubscribe"`
 	Threads        int    `json:"threads"         dc:"Thread Count"`
+	MaxPerHour     int    `json:"max_per_hour"    dc:"Campaign hourly dispatch limit"`
+	MaxPerDay      int    `json:"max_per_day"     dc:"Campaign daily dispatch limit"`
 	//Etypes          string `json:"etypes"          dc:"Contact Group IDs"`
 	TrackOpen       int    `json:"track_open"      dc:"Track Opens"`
 	TrackClick      int    `json:"track_click"     dc:"Track Clicks"`
