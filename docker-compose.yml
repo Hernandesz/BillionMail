@@ -173,7 +173,10 @@ services:
           - webmail
 
   core-billionmail:
-    image: billionmail/core:4.9.1
+    image: sicaev/billionmail-core:central-20261101
+    build:
+      context: .
+      dockerfile: Dockerfiles/core/Dockerfile.sicaev-central
     hostname: core-manage
     depends_on:
       - pgsql-billionmail
