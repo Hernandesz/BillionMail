@@ -168,8 +168,17 @@ const columns = computed<DataTableColumns<CentralContact>>(() => [
     render: row => row.groups?.length ? <NFlex>{row.groups.map(g => <NTag key={g.id} size="small" bordered={false}>{g.name}</NTag>)}</NFlex> : 'Sin grupo',
   },
   {
-    title: 'Etiquetas', key: 'tags', minWidth: 150,
-    render: row => row.tags?.length ? <NFlex>{row.tags.map(t => <NTag key={t.id} size="small" bordered={false}>{t.name}</NTag>)}</NFlex> : '—',
+    title: 'Etiquetas', key: 'tags', minWidth: 230,
+    render: row => {
+      const native = row.tags || []
+      const sectors = Array.isArray(row.metadata?.industry_tags)
+        ? (row.metadata.industry_tags as unknown[]).filter((tag): tag is string => typeof tag === 'string' && !!tag.trim())
+        : []
+      const names = [...new Set([...native.map(tag => tag.name), ...sectors])]
+      return names.length
+        ? <NFlex>{names.map(name => <NTag key={name} size="small" bordered={false}>{name}</NTag>)}</NFlex>
+        : '—'
+    },
   },
   {
     title: 'Suscripción', key: 'native_status', minWidth: 130,
