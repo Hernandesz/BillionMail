@@ -474,6 +474,7 @@ func BatchCreateContactsWithOverwrite(ctx context.Context, contacts []*entity.Co
 
 					updateData := g.Map{
 						"active": newContact.Active,
+						"status": newContact.Status,
 					}
 
 					if len(newContact.Attribs) > 0 {
