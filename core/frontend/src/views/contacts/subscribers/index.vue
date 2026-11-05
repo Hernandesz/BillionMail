@@ -179,6 +179,30 @@ const columns = computed<DataTableColumns<Subscriber>>(() => [
 		},
 	},
 	{
+		key: 'active',
+		title: 'active (suscripción)',
+		width: 155,
+		render: row => (
+			<NButton size="small" quaternary={true} onClick={() => handleEdit(row)}>
+				<NTag size="small" type={row.active === 1 ? 'success' : 'default'} bordered={false}>
+					{String(row.active)}
+				</NTag>
+			</NButton>
+		),
+	},
+	{
+		key: 'status_raw',
+		title: 'status (confirmación)',
+		width: 165,
+		render: row => (
+			<NButton size="small" quaternary={true} onClick={() => handleEdit(row)}>
+				<NTag size="small" type={row.status === 1 ? 'success' : 'default'} bordered={false}>
+					{String(row.status)}
+				</NTag>
+			</NButton>
+		),
+	},
+	{
 		key: 'last_active_at',
 		title: t('contacts.subscribers.columns.lastActiveAt'),
 		minWidth: 100,
